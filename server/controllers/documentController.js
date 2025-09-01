@@ -1,56 +1,107 @@
-import Document from "../models/Document.js";
-import DocumentVersion from "../models/DocumentVersion.js";
-import Activity from "../models/Activity.js";
-import { documentSchema } from "../validations/documentValidation.js";
-import { generateSummary, generateTags, semanticSearchEngine, simpleQA } from "../services/aiService.js";
+const Document = require("../models/Document");
+const DocumentVersion = require("../models/DocumentVersion");
+const Activity = require("../models/Activity");
+const { documentSchema } = require("../validations/documentValidation");
+const {
+  generateSummary,
+  generateTags,
+  semanticSearchEngine,
+  simpleQA,
+  geminiSummarize,
+  geminiGenerateTags,
+} = require("../services/aiService");
 
-// 🆕 Helper: Log Activity
-const logActivity = async (action, documentId, userId) => {
-  await new Activity({ action, documentId, userId }).save();
-};
+const fs = require("fs");
+const pdf = require("pdf-parse");
 
-// ==================== CRUD ==================== //
-
-// Create Document with AI + log
-const createDocument = async (req, res, next) => {
+const uploadPdf = async (req, res, next) => {
   try {
-    const parsed = documentSchema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ errors: parsed.error.errors });
+    if (!req.file) return res.status(400).json({ message: "No file uploaded" });
 
-    const { title, content } = parsed.data;
-    const summary = generateSummary(content);
-    const tags = generateTags(content);
+    const dataBuffer = fs.readFileSync(req.file.path);
+    const pdfData = await pdf(dataBuffer);
 
+    // Now pdfData.text contains extracted text
     const doc = new Document({
-      ...parsed.data,
-      summary,
-      tags,
-      createdBy: req.user.id
+      title: req.file.originalname,
+      content: pdfData.text,
+      tags: generateTags(pdfData.text),
+      summary: generateSummary(pdfData.text),
+      createdBy: req.user.id,
     });
-
     await doc.save();
-    await logActivity("created", doc._id, req.user.id);
 
-    res.status(201).json({ message: "Document created", document: doc });
+    // Log activity
+    await Activity.create({
+      action: "uploaded",
+      documentId: doc._id,
+      userId: req.user.id,
+    });
+    // After saving the main document
+    await DocumentVersion.create({
+  documentId: doc._id,
+  title: doc.title,
+  content: doc.content,
+  editedBy: req.user.id,
+});
+
+
+    res.status(201).json({ message: "PDF uploaded and processed", document: doc });
   } catch (err) {
     next(err);
   }
 };
 
-// Get All Documents
+
+// ✅ Create Document
+const createDocument = async (req, res, next) => {
+  try {
+    const parsed = documentSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ errors: parsed.error.errors });
+    }
+
+    const { title, content, tags } = parsed.data;
+    const summary = generateSummary(content);
+
+    const doc = new Document({
+      title,
+      content,
+      tags: tags || generateTags(content),
+      summary,
+      createdBy: req.user.id,
+    });
+    // console.log("req.file:", req.file);
+    // console.log("req.user:", req.user);
+
+    await doc.save();
+
+    await Activity.create({
+      action: "created",
+      documentId: doc._id,
+      userId: req.user.id,
+    });
+
+    res.status(201).json(doc);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ✅ Get All Documents
 const getDocuments = async (req, res, next) => {
   try {
-    const docs = await Document.find().populate("createdBy", "firstname lastname role");
+    const docs = await Document.find().populate("createdBy", "firstname lastname email");
     res.json(docs);
   } catch (err) {
     next(err);
   }
 };
 
-// Get Single Document
-const getDocument = async (req, res, next) => {
+// ✅ Get Document by ID
+const getDocumentById = async (req, res, next) => {
   try {
-    const doc = await Document.findById(req.params.id).populate("createdBy", "firstname lastname role");
+    const doc = await Document.findById(req.params.id).populate("createdBy", "firstname lastname email");
     if (!doc) return res.status(404).json({ message: "Document not found" });
     res.json(doc);
   } catch (err) {
@@ -58,150 +109,176 @@ const getDocument = async (req, res, next) => {
   }
 };
 
-// Update Document with version history + log
+// ✅ Update Document
 const updateDocument = async (req, res, next) => {
   try {
     const parsed = documentSchema.partial().safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ errors: parsed.error.errors });
+    if (!parsed.success) {
+      return res.status(400).json({ errors: parsed.error.errors });
+    }
 
     const doc = await Document.findById(req.params.id);
     if (!doc) return res.status(404).json({ message: "Document not found" });
 
-    if (doc.createdBy.toString() !== req.user.id && req.user.role !== "admin") {
-      return res.status(403).json({ message: "Access denied" });
+    // 🔒 Only admin OR creator can edit
+    if (req.user.role !== "admin" && doc.createdBy.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Not allowed to edit this document" });
     }
 
-    // Save old version before updating
-    await new DocumentVersion({
-      documentId: doc._id,
-      title: doc.title,
-      content: doc.content,
-      tags: doc.tags,
-      summary: doc.summary,
-      editedBy: req.user.id
-    }).save();
+   // Before updating the document
+const oldDoc = await Document.findById(req.params.id);
 
-    // Apply updates
-    Object.assign(doc, parsed.data, { updatedAt: Date.now() });
+await DocumentVersion.create({
+  documentId: oldDoc._id,
+  title: oldDoc.title,
+  content: oldDoc.content,
+  editedBy: req.user.id,
+});
 
-    if (parsed.data.content) {
-      doc.summary = generateSummary(parsed.data.content);
-      doc.tags = generateTags(parsed.data.content);
+
+    const { title, content, tags } = parsed.data;
+    if (title) doc.title = title;
+    if (content) {
+      doc.content = content;
+      doc.summary = generateSummary(content);
+      if (!tags) doc.tags = generateTags(content);
     }
+    if (tags) doc.tags = tags;
 
     await doc.save();
-    await logActivity("updated", doc._id, req.user.id);
 
-    res.json({ message: "Document updated", document: doc });
+    await Activity.create({
+      action: "updated",
+      documentId: doc._id,
+      userId: req.user.id,
+    });
+
+    res.json(doc);
   } catch (err) {
     next(err);
   }
 };
 
-// Delete Document + log
+// ✅ Delete Document
 const deleteDocument = async (req, res, next) => {
   try {
     const doc = await Document.findById(req.params.id);
     if (!doc) return res.status(404).json({ message: "Document not found" });
 
-    if (doc.createdBy.toString() !== req.user.id && req.user.role !== "admin") {
-      return res.status(403).json({ message: "Access denied" });
+    // 🔒 Only admin OR creator can delete
+    if (req.user.role !== "admin" && doc.createdBy.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Not allowed to delete this document" });
     }
 
     await doc.deleteOne();
-    await logActivity("deleted", doc._id, req.user.id);
 
-    res.json({ message: "Document deleted" });
-  } catch (err) {
-    next(err);
-  }
-};
-
-// ==================== AI Features ==================== //
-
-// Text Search
-const searchDocuments = async (req, res, next) => {
-  try {
-    const { query } = req.query;
-    const docs = await Document.find({
-      $or: [
-        { title: new RegExp(query, "i") },
-        { content: new RegExp(query, "i") },
-        { tags: { $in: [query] } }
-      ]
+    await Activity.create({
+      action: "deleted",
+      documentId: doc._id,
+      userId: req.user.id,
     });
-    res.json(docs);
+
+    res.json({ message: "Document deleted successfully" });
   } catch (err) {
     next(err);
   }
 };
 
-// Semantic Search
+
+// ✅ Semantic Search
 const semanticSearch = async (req, res, next) => {
   try {
-    const { query } = req.query;
+    const { query } = req.body;
     const docs = await Document.find();
-
     const results = semanticSearchEngine(query, docs);
-    res.json(results.map(r => ({ ...r.doc.toObject(), score: r.score })));
+    res.json(results.map(r => ({ document: r.doc, score: r.score })));
   } catch (err) {
     next(err);
   }
 };
 
-// Q&A
-const questionAnswer = async (req, res, next) => {
+// ✅ Simple Q&A
+const qa = async (req, res, next) => {
   try {
     const { question } = req.body;
     const docs = await Document.find();
     const answer = simpleQA(question, docs);
-    res.json({ question, answer });
+    res.json({ answer });
   } catch (err) {
     next(err);
   }
 };
 
-
-
-// Version History
 const getVersionHistory = async (req, res, next) => {
   try {
     const versions = await DocumentVersion.find({ documentId: req.params.id })
-      .populate("editedBy", "firstname lastname")
-      .sort({ editedAt: -1 });
+      .populate("editedBy", "firstname lastname email")
+      .sort({ createdAt: -1 });
 
-    res.json(versions);
+    return res.status(200).json({
+      success: true,
+      count: versions.length,
+      versions,  // ✅ always return an array
+    });
   } catch (err) {
-    next(err);
+    console.error("❌ Version history error:", err.message);
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
-// Activity Feed
+
+
+// ✅ Activity Feed
 const getActivityFeed = async (req, res, next) => {
   try {
     const feed = await Activity.find()
-      .populate("userId", "firstname lastname role")
+      .populate("userId", "firstname lastname email")
       .populate("documentId", "title")
-      .sort({ timestamp: -1 })
-      .limit(5);
-
+      .sort({ timestamp: -1 });
     res.json(feed);
   } catch (err) {
     next(err);
   }
 };
 
+const summarizeDocument = async (req, res) => {
+  const doc = await Document.findById(req.params.id);
+  const summary = await geminiSummarize(doc.content); // your Gemini API fn
+  doc.summary = summary;
+  await doc.save();
+  res.json({ message: "Summary updated", doc });
+};
+
+const generateTagsGemini = async (req, res) => {
+  try {
+    const doc = await Document.findById(req.params.id);
+    if (!doc) return res.status(404).json({ message: "Document not found" });
+
+    const tags = await geminiGenerateTags(doc.content); // ✅ exists in aiService
+    doc.tags = tags;
+    await doc.save();
+
+    res.json({ message: "Tags generated", doc });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+
+
 
 module.exports = {
   createDocument,
   getDocuments,
-  getDocument,
+  getDocumentById,
   updateDocument,
   deleteDocument,
-  searchDocuments,
   semanticSearch,
-  questionAnswer,
+  qa,
+  getActivityFeed,
   getVersionHistory,
-  getActivityFeed
+  uploadPdf,
+  summarizeDocument,
+  generateTagsGemini 
 };
-

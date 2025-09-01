@@ -1,13 +1,15 @@
 const mongoose = require("mongoose");
 
-const versionSchema = new mongoose.Schema({
-  documentId: { type: mongoose.Schema.Types.ObjectId, ref: "Document", required: true },
-  title: String,
-  content: String,
-  tags: [String],
-  summary: String,
-  editedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  editedAt: { type: Date, default: Date.now }
-});
+const documentVersionSchema = new mongoose.Schema(
+  {
+    documentId: { type: mongoose.Schema.Types.ObjectId, ref: "Document", required: true },
+    title: String,
+    content: String,
+    tags: [String],
+    summary: String,
+    editedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true } // ✅ must match "editedBy"
+  },
+  { timestamps: true }
+);
 
-module.exports = mongoose.model("DocumentVersion", versionSchema);
+module.exports = mongoose.model("DocumentVersion", documentVersionSchema);

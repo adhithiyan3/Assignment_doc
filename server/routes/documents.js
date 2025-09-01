@@ -1,31 +1,45 @@
 const express = require("express");
-const { verifyToken } = require("../middleware/authMiddleware");
 const {
   createDocument,
   getDocuments,
-  getDocument,
+  getDocumentById,
   updateDocument,
   deleteDocument,
-  searchDocuments,
   semanticSearch,
-  questionAnswer,
+  qa,
+  getActivityFeed,
   getVersionHistory,
-  getActivityFeed
+  uploadPdf,
+  summarizeDocument,
+  generateTagsGemini 
 } = require("../controllers/documentController");
 
-const router = express.Router();
+const { verifyToken, isAdmin } = require("../middleware/authMiddleware");
 
+const router = express.Router();
+const multer = require("multer");
+const upload = multer({ dest: "uploads/" });
+
+router.post("/upload", verifyToken, upload.single("file"), uploadPdf);
+
+
+// Document CRUD
 router.post("/", verifyToken, createDocument);
 router.get("/", verifyToken, getDocuments);
-router.get("/:id", verifyToken, getDocument);
+router.get("/:id", verifyToken, getDocumentById);
 router.put("/:id", verifyToken, updateDocument);
-router.delete("/:id", verifyToken, deleteDocument);
+router.delete("/:id", verifyToken, isAdmin, deleteDocument);
 
-router.get("/search/text", verifyToken, searchDocuments);
-router.get("/search/semantic", verifyToken, semanticSearch);
-router.post("/qa", verifyToken, questionAnswer);
+// AI Features
+router.post("/search", verifyToken, semanticSearch);
+router.post("/qa", verifyToken, qa);
 
+// Activity Feed & Versions
+router.get("/activity/feed", verifyToken, getActivityFeed);
 router.get("/:id/versions", verifyToken, getVersionHistory);
-router.get("/feed/activity", verifyToken, getActivityFeed);
+
+router.post("/:id/summarize", verifyToken, summarizeDocument);
+router.post("/:id/tags", verifyToken, generateTagsGemini);
+
 
 module.exports = router;

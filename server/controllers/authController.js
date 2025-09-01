@@ -6,6 +6,7 @@ const { registerSchema, loginSchema } = require("../validations/authValidation")
 const register = async (req, res, next) => {
   try {
     const parsed = registerSchema.safeParse(req.body);
+    console.log(parsed);
     if (!parsed.success) return res.status(400).json({ errors: parsed.error.errors });
 
     const { firstname, lastname, email, password, role } = parsed.data;
@@ -34,9 +35,19 @@ const login = async (req, res, next) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET);
 
-    res.json({ token, role: user.role, firstname: user.firstname });
+  res.json({
+  token,
+  user: {
+    id: user._id,
+    firstname: user.firstname,
+    lastname: user.lastname,
+    email: user.email,
+    role: user.role
+  }
+});
+
   } catch (err) {
     next(err);
   }
