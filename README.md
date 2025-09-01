@@ -85,7 +85,7 @@ ASSIGNMENT_DOC/
 
 ### 1️⃣ Clone the repo
 # bash
-git clone https://github.com/your-username/assignment-doc.git
+git clone [(https://github.com/adhithiyan3/Assignment_doc.git)](https://github.com/adhithiyan3/Assignment_doc.git)
 cd assignment-doc
 
 
