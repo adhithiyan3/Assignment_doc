@@ -48,46 +48,7 @@ This app allows teams to create, upload, manage, search, and collaborate on docu
 - 🤖 AI (Gemini API for summarization & tags)  
 - 📄 pdf-parse (extract text from PDFs)  
 
----
 
-## 📂 Project Structure
-ASSIGNMENT_DOC/
-│── client/                     # React frontend (Vite + Tailwind)
-│   ├── public/                 # Static assets (favicon, images)
-│   ├── src/
-│   │   ├── assets/             # Project-specific assets (logos, icons)
-│   │   ├── components/         # Reusable components (Navbar, DocumentCard, etc.)
-│   │   ├── context/            # Context providers (ThemeContext, AuthContext)
-│   │   ├── hooks/              # Custom React hooks
-│   │   ├── pages/              # App pages (Login, Register, Dashboard, Documents)
-│   │   ├── routes/             # Frontend route definitions
-│   │   ├── services/           # API calls (axios/fetch wrappers)
-│   │   ├── styles/             # Tailwind configs, global styles
-│   │   └── utils/              # Helpers (formatters, validators)
-│   ├── index.html              # Entry HTML
-│   ├── vite.config.js          # Vite configuration
-│   └── package.json            # Frontend dependencies
-│
-│── server/                     # Node.js backend (Express + MongoDB)
-│   ├── config/                 # DB connection, JWT, environment configs
-│   ├── controllers/            # Request handlers (business logic)
-│   ├── middleware/             # Auth, error handling, logging
-│   ├── models/                 # Mongoose schemas (User, Document, Activity)
-│   ├── routes/                 # Express routes (auth, docs, ai, activity)
-│   ├── services/               # AI integration, helpers, utils
-│   ├── utils/                  # Reusable functions (validators, response handler)
-│   ├── uploads/                # PDF uploads (if storing locally)
-│   ├── index.js                # Server entry point
-│   └── package.json            # Backend dependencies
-│
-├── .env                        # Environment variables (ignored by git)
-├── .env.example                # Example env template
-├── .gitignore                  # Ignore node_modules, build, uploads, .env
-├── package.json                # Root dependencies (optional, if using workspaces)
-├── README.md                   # Main documentation
-└── API_DOC.md                  # API documentation (to be created)
-
----
 
 ---
 
