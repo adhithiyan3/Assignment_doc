@@ -7,7 +7,7 @@ const documentVersionSchema = new mongoose.Schema(
     content: String,
     tags: [String],
     summary: String,
-    editedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true } // ✅ must match "editedBy"
+    editedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true } // must match "editedBy"
   },
   { timestamps: true }
 );

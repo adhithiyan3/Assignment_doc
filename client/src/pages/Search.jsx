@@ -14,11 +14,11 @@ const Search = () => {
   const handleSemanticSearch = async () => {
     try {
       const res = await axios.post(
-        "http://localhost:3000/api/documents/search", // ✅ backend route
+        "http://localhost:3000/api/documents/search", //backend route
         { query },
         {
           headers: {
-            token: token, // ✅ send token as "token"
+            token: token, // send token as "token"
           },
         }
       );
@@ -32,11 +32,11 @@ const Search = () => {
   const handleQA = async () => {
     try {
       const res = await axios.post(
-        "http://localhost:3000/api/documents/qa", // ✅ backend route
+        "http://localhost:3000/api/documents/qa", // backend route
         { question },
         {
           headers: {
-            token: token, // ✅ send token as "token"
+            token: token, // send token as "token"
           },
         }
       );

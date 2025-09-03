@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"; // ✅ added
+import { useNavigate } from "react-router-dom"; //  added
 import API from "../utils/api";
 import DocumentCard from "../components/DocumentCard";
 
@@ -12,7 +12,7 @@ export default function Documents() {
   const [taggingId, setTaggingId] = useState(null);
 
   const [currentUser, setCurrentUser] = useState(null);
-  const navigate = useNavigate(); // ✅ added
+  const navigate = useNavigate(); // added
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
@@ -42,10 +42,10 @@ export default function Documents() {
         prev.map((d) => (d._id === id ? { ...d, summary: updated.summary } : d))
       );
 
-      alert("✅ Summary updated successfully!");
+      alert("Summary updated successfully!");
     } catch (e) {
       console.error(e);
-      alert(e.response?.data?.message || "❌ Failed to summarize");
+      alert(e.response?.data?.message || " Failed to summarize");
     } finally {
       setSummarizingId(null);
     }
@@ -61,10 +61,10 @@ export default function Documents() {
         prev.map((d) => (d._id === id ? { ...d, tags: updated.tags } : d))
       );
 
-      alert("✅ Tags generated successfully!");
+      alert("Tags generated successfully!");
     } catch (e) {
       console.error(e);
-      alert(e.response?.data?.message || "❌ Failed to generate tags");
+      alert(e.response?.data?.message || " Failed to generate tags");
     } finally {
       setTaggingId(null);
     }
@@ -75,10 +75,10 @@ export default function Documents() {
     try {
       await API.delete(`/documents/${id}`);
       setDocs((prev) => prev.filter((d) => d._id !== id));
-      alert("✅ Document deleted successfully!");
+      alert(" Document deleted successfully!");
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "❌ Failed to delete document");
+      alert(err.response?.data?.message || "Failed to delete document");
     }
   };
 
@@ -127,7 +127,7 @@ export default function Documents() {
               onView={(id) => navigate(`/documents/${id}`)}
               onEdit={(id) => navigate(`/documents/${id}/edit`)}
               onDelete={handleDelete}
-              currentUser={currentUser} // ✅ pass user
+              currentUser={currentUser} // pass user
             />
           ))}
       </div>

@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom"; // ✅ 1. import navigate
+import { useNavigate } from "react-router-dom"; // 1. import navigate
 
 function Upload() {
   const [file, setFile] = useState(null);
-  const navigate = useNavigate(); // ✅ 2. place it here (inside component, before return)
+  const navigate = useNavigate(); // 2. place it here (inside component, before return)
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -33,10 +33,10 @@ function Upload() {
         throw new Error(data.message || "Upload failed");
       }
 
-      // ✅ 3. place navigate here (after upload success)
+      // 3. place navigate here (after upload success)
       alert("Upload successful!");
       navigate("/documents"); 
-      // 👆 goes to your documents list page
+      // goes to your documents list page
       // or navigate(`/documents/${data.document._id}`) if you want detail page
     } catch (err) {
       alert("Something went wrong: " + err.message);

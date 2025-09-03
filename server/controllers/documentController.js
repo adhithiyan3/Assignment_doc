@@ -53,7 +53,7 @@ const uploadPdf = async (req, res, next) => {
 };
 
 
-// ✅ Create Document
+//  Create Document
 const createDocument = async (req, res, next) => {
   try {
     const parsed = documentSchema.safeParse(req.body);
@@ -88,7 +88,7 @@ const createDocument = async (req, res, next) => {
   }
 };
 
-// ✅ Get All Documents
+//  Get All Documents
 const getDocuments = async (req, res, next) => {
   try {
     const docs = await Document.find().populate("createdBy", "firstname lastname email");
@@ -98,7 +98,7 @@ const getDocuments = async (req, res, next) => {
   }
 };
 
-// ✅ Get Document by ID
+//  Get Document by ID
 const getDocumentById = async (req, res, next) => {
   try {
     const doc = await Document.findById(req.params.id).populate("createdBy", "firstname lastname email");
@@ -109,7 +109,7 @@ const getDocumentById = async (req, res, next) => {
   }
 };
 
-// ✅ Update Document
+// Update Document
 const updateDocument = async (req, res, next) => {
   try {
     const parsed = documentSchema.partial().safeParse(req.body);
@@ -120,7 +120,7 @@ const updateDocument = async (req, res, next) => {
     const doc = await Document.findById(req.params.id);
     if (!doc) return res.status(404).json({ message: "Document not found" });
 
-    // 🔒 Only admin OR creator can edit
+    // Only admin OR creator can edit
     if (req.user.role !== "admin" && doc.createdBy.toString() !== req.user.id) {
       return res.status(403).json({ message: "Not allowed to edit this document" });
     }
@@ -159,13 +159,13 @@ await DocumentVersion.create({
   }
 };
 
-// ✅ Delete Document
+//  Delete Document
 const deleteDocument = async (req, res, next) => {
   try {
     const doc = await Document.findById(req.params.id);
     if (!doc) return res.status(404).json({ message: "Document not found" });
 
-    // 🔒 Only admin OR creator can delete
+    //  Only admin OR creator can delete
     if (req.user.role !== "admin" && doc.createdBy.toString() !== req.user.id) {
       return res.status(403).json({ message: "Not allowed to delete this document" });
     }
@@ -185,7 +185,7 @@ const deleteDocument = async (req, res, next) => {
 };
 
 
-// ✅ Semantic Search
+// Semantic Search
 const semanticSearch = async (req, res, next) => {
   try {
     const { query } = req.body;
@@ -197,7 +197,7 @@ const semanticSearch = async (req, res, next) => {
   }
 };
 
-// ✅ Simple Q&A
+// Simple Q&A
 const qa = async (req, res, next) => {
   try {
     const { question } = req.body;
@@ -218,17 +218,17 @@ const getVersionHistory = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       count: versions.length,
-      versions,  // ✅ always return an array
+      versions,  // always return an array
     });
   } catch (err) {
-    console.error("❌ Version history error:", err.message);
+    console.error(" Version history error:", err.message);
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
 
 
-// ✅ Activity Feed
+// Activity Feed
 const getActivityFeed = async (req, res, next) => {
   try {
     const feed = await Activity.find()
@@ -254,7 +254,7 @@ const generateTagsGemini = async (req, res) => {
     const doc = await Document.findById(req.params.id);
     if (!doc) return res.status(404).json({ message: "Document not found" });
 
-    const tags = await geminiGenerateTags(doc.content); // ✅ exists in aiService
+    const tags = await geminiGenerateTags(doc.content); //  exists in aiService
     doc.tags = tags;
     await doc.save();
 

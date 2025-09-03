@@ -4,7 +4,7 @@ import ThemeToggle from "./ThemeToggle";
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("user")); // ✅ always fresh
+  const user = JSON.parse(localStorage.getItem("user")); //  always fresh
 
   const handleLogout = () => {
     localStorage.removeItem("token");

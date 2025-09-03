@@ -19,7 +19,7 @@ export default function Dashboard() {
     }
   };
 
-  // ✅ Call summarize endpoint
+  // Call summarize endpoint
   const handleSummarize = async (id) => {
     try {
       await API.post(`/documents/${id}/summarize`);
@@ -30,7 +30,7 @@ export default function Dashboard() {
     }
   };
 
-  // ✅ Call generate-tags endpoint
+  // Call generate-tags endpoint
   const handleGenerateTags = async (id) => {
     try {
       await API.post(`/documents/${id}/generate-tags`);
@@ -41,7 +41,7 @@ export default function Dashboard() {
     }
   };
 
-  // ✅ gather unique tags
+  // gather unique tags
   const uniqueTags = [...new Set(docs.flatMap((d) => d.tags || []))];
 
   return (

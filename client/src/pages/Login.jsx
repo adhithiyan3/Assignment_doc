@@ -14,7 +14,7 @@ export default function Login() {
       localStorage.setItem("user", JSON.stringify(res.data.user));
 
       alert("Login success!");
-      navigate("/upload"); // ✅ redirect after login
+      navigate("/upload"); //  redirect after login
     } catch (err) {
       alert(err.response?.data?.message || "Login failed");
     }

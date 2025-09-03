@@ -19,11 +19,11 @@ export default function CreateDocument() {
         tags: tags ? tags.split(",").map((t) => t.trim()) : [],
       });
 
-      alert("✅ Document created successfully!");
+      alert("Document created successfully!");
       navigate("/documents"); // go back to docs list
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "❌ Failed to create document");
+      alert(err.response?.data?.message || " Failed to create document");
     }
   };
 

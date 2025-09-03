@@ -24,7 +24,7 @@ const EditDocument = () => {
           tags: res.data.tags?.join(", ") || "",
         });
       } catch (err) {
-        console.error("❌ Error fetching document", err);
+        console.error(" Error fetching document", err);
       }
     };
     fetchDoc();
@@ -44,10 +44,10 @@ const EditDocument = () => {
         { ...form, tags: form.tags.split(",").map((t) => t.trim()) },
         { headers: { token } }
       );
-      alert("✅ Document updated successfully");
+      alert(" Document updated successfully");
       navigate("/documents");
     } catch (err) {
-      console.error("❌ Error updating doc", err);
+      console.error("Error updating doc", err);
       alert(err.response?.data?.message || "Error updating document");
     }
   };
